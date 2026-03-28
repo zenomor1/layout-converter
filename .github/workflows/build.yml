@@ -26,13 +26,17 @@ jobs:
       run: |
         pyinstaller --onefile --windowed --name "LayoutConverter" layout_converter.py
     
-    - name: Build Advanced Version
+    - name: Build Advanced Version (PRO)
       run: |
         pyinstaller --onefile --windowed --name "LayoutConverterPRO" layout_converter_advanced.py
+    
+    - name: Build Tray Version (Auto-replace)
+      run: |
+        pyinstaller --onefile --windowed --name "LayoutConverterTRAY" layout_converter_tray.py
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: layout-converter-exe
+        name: layout-converter-all
         path: dist/*.exe
         retention-days: 30
