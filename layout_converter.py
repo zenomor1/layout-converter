@@ -28,8 +28,12 @@ class LayoutConverter:
     def __init__(self, root):
         self.root = root
         self.root.title("Конвертер раскладки")
-        self.root.geometry("700x400")
+        self.root.geometry("900x500")
         self.root.resizable(True, True)
+        
+        # Настройка grid weight для ресайза
+        self.root.grid_rowconfigure(1, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
         
         # Режим конвертации
         self.mode = tk.StringVar(value="ru_to_en")
@@ -37,65 +41,68 @@ class LayoutConverter:
         self.create_widgets()
     
     def create_widgets(self):
-        # Верхняя панель с выбором режима
+        # === ВЕРХНЯЯ ПАНЕЛЬ (режим) ===
         top_frame = ttk.Frame(self.root, padding="10")
-        top_frame.pack(fill=tk.X)
+        top_frame.grid(row=0, column=0, sticky="ew")
         
         ttk.Label(top_frame, text="Режим:", font=('Arial', 10, 'bold')).pack(side=tk.LEFT, padx=(0, 10))
         
-        self.mode_combo = ttk.Combobox(top_frame, textvariable=self.mode, state="readonly", width=40)
-        self.mode_combo['values'] = ('ru_to_en', 'en_to_ru')
-        self.mode_combo.set('ru_to_en')
+        self.mode_combo = ttk.Combobox(top_frame, textvariable=self.mode, state="readonly", width=30)
+        self.mode_combo['values'] = ('RU → EN (русская раскладка в английскую)', 'EN → RU (английская раскладка в русскую)')
+        self.mode_combo.current(0)
         self.mode_combo.pack(side=tk.LEFT)
         
-        # Основной фрейм для текстовых полей
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # === ОСНОВНОЙ КОНТЕНТ ===
+        content_frame = ttk.Frame(self.root, padding="10")
+        content_frame.grid(row=1, column=0, sticky="nsew")
+        content_frame.grid_rowconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(2, weight=1)
         
-        # Левое поле
-        left_frame = ttk.LabelFrame(main_frame, text="Исходный текст", padding="5")
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
+        # --- ЛЕВОЕ ОКНО ---
+        left_frame = ttk.LabelFrame(content_frame, text="Исходный текст", padding="5")
+        left_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        left_frame.grid_rowconfigure(0, weight=1)
+        left_frame.grid_columnconfigure(0, weight=1)
         
-        # Текстовое поле слева
         self.left_text = tk.Text(left_frame, wrap=tk.WORD, font=('Consolas', 11))
-        self.left_text.pack(fill=tk.BOTH, expand=True)
+        self.left_text.grid(row=0, column=0, sticky="nsew")
         
         scrollbar_left = ttk.Scrollbar(left_frame, command=self.left_text.yview)
-        scrollbar_left.pack(side=tk.RIGHT, fill=tk.Y)
+        scrollbar_left.grid(row=0, column=1, sticky="ns")
         self.left_text.config(yscrollcommand=scrollbar_left.set)
         
-        # Кнопка Вставить под левым полем
-        btn_paste = ttk.Button(left_frame, text="📋 Вставить", command=self.paste_text)
-        btn_paste.pack(fill=tk.X, pady=(5, 0))
+        btn_paste = ttk.Button(left_frame, text="📋 Вставить из буфера", command=self.paste_text)
+        btn_paste.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(5, 0))
         
-        # Центральная панель с кнопкой
-        center_frame = ttk.Frame(main_frame)
-        center_frame.pack(side=tk.LEFT, fill=tk.Y, padx=5)
+        # --- ЦЕНТР (кнопка конвертации) ---
+        center_frame = ttk.Frame(content_frame)
+        center_frame.grid(row=0, column=1, sticky="ns", padx=10)
         
-        btn_convert = ttk.Button(center_frame, text="➡\nКонверти-\nровать\n➡", 
+        btn_convert = ttk.Button(center_frame, text="Конверти-\nровать\n➡", 
                                   command=self.convert, width=12)
         btn_convert.pack(expand=True, fill=tk.Y)
         
-        # Правое поле
-        right_frame = ttk.LabelFrame(main_frame, text="Результат", padding="5")
-        right_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(5, 0))
+        # --- ПРАВОЕ ОКНО ---
+        right_frame = ttk.LabelFrame(content_frame, text="Результат", padding="5")
+        right_frame.grid(row=0, column=2, sticky="nsew", padx=(5, 0))
+        right_frame.grid_rowconfigure(0, weight=1)
+        right_frame.grid_columnconfigure(0, weight=1)
         
-        # Текстовое поле справа
         self.right_text = tk.Text(right_frame, wrap=tk.WORD, font=('Consolas', 11))
-        self.right_text.pack(fill=tk.BOTH, expand=True)
+        self.right_text.grid(row=0, column=0, sticky="nsew")
         
         scrollbar_right = ttk.Scrollbar(right_frame, command=self.right_text.yview)
-        scrollbar_right.pack(side=tk.RIGHT, fill=tk.Y)
+        scrollbar_right.grid(row=0, column=1, sticky="ns")
         self.right_text.config(yscrollcommand=scrollbar_right.set)
         
-        # Кнопка Скопировать под правым полем
-        btn_copy = ttk.Button(right_frame, text="📋 Скопировать", command=self.copy_result)
-        btn_copy.pack(fill=tk.X, pady=(5, 0))
+        btn_copy = ttk.Button(right_frame, text="📋 Скопировать в буфер", command=self.copy_result)
+        btn_copy.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(5, 0))
         
-        # Статус бар
-        self.status_var = tk.StringVar(value="Готов к работе")
+        # === СТАТУС БАР ===
+        self.status_var = tk.StringVar(value="Готов к работе. Введите текст слева и нажмите 'Конвертировать'")
         status_bar = ttk.Label(self.root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
-        status_bar.pack(fill=tk.X, side=tk.BOTTOM)
+        status_bar.grid(row=2, column=0, sticky="ew")
     
     def paste_text(self):
         """Вставить текст из буфера обмена в левое поле"""
@@ -113,20 +120,22 @@ class LayoutConverter:
             text = self.right_text.get('1.0', tk.END).strip()
             if text:
                 pyperclip.copy(text)
-                self.status_var.set("Результат скопирован в буфер")
+                self.status_var.set("✓ Результат скопирован в буфер")
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось скопировать: {e}")
     
     def convert(self):
         """Конвертировать текст из левого поля в правое"""
         source_text = self.left_text.get('1.0', tk.END)
-        mode = self.mode.get()
+        
+        # Определяем режим по индексу выбранного элемента
+        mode_idx = self.mode_combo.current()
         
         result = []
         for char in source_text:
-            if mode == 'ru_to_en':
+            if mode_idx == 0:  # RU → EN
                 result.append(RU_TO_EN.get(char, char))
-            else:
+            else:  # EN → RU
                 result.append(EN_TO_RU.get(char, char))
         
         result_text = ''.join(result)
@@ -137,7 +146,7 @@ class LayoutConverter:
         
         # Автоматически копируем в буфер
         pyperclip.copy(result_text)
-        self.status_var.set(f"Конвертировано: {len(source_text)} символов. Результат скопирован!")
+        self.status_var.set(f"✓ Конвертировано {len(source_text)} символов. Результат скопирован!")
 
 if __name__ == "__main__":
     root = tk.Tk()
